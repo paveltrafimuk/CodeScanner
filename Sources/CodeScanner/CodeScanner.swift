@@ -36,7 +36,7 @@ public struct CodeScannerView: UIViewControllerRepresentable {
             if let metadataObject = metadataObjects.first {
                 guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject else { return }
                 guard let stringValue = readableObject.stringValue else { return }
-                guard isFinishScanning == false else { return }
+                guard isFinishScanning == false && !parent.isPausedScanning else { return }
 
                 switch self.parent.scanMode {
                 case .once:
@@ -240,18 +240,21 @@ public struct CodeScannerView: UIViewControllerRepresentable {
     }
     #endif
 
+    @Binding public var isPausedScanning: Bool
     public let codeTypes: [AVMetadataObject.ObjectType]
     public let scanMode: ScanMode
     public let scanInterval: Double
     public var simulatedData = ""
     public var completion: (Result<String, ScanError>) -> Void
 
-    public init(codeTypes: [AVMetadataObject.ObjectType], scanMode: ScanMode = .once, scanInterval: Double = 2.0, simulatedData: String = "", completion: @escaping (Result<String, ScanError>) -> Void) {
+    public init(codeTypes: [AVMetadataObject.ObjectType], scanMode: ScanMode = .once, scanInterval: Double = 2.0,
+                isPausedScanning: Binding<Bool>, simulatedData: String = "", completion: @escaping (Result<String, ScanError>) -> Void) {
         self.codeTypes = codeTypes
         self.scanMode = scanMode
         self.scanInterval = scanInterval
         self.simulatedData = simulatedData
         self.completion = completion
+        self._isPausedScanning = isPausedScanning
     }
 
     public func makeCoordinator() -> ScannerCoordinator {
@@ -271,7 +274,7 @@ public struct CodeScannerView: UIViewControllerRepresentable {
 
 struct CodeScannerView_Previews: PreviewProvider {
     static var previews: some View {
-        CodeScannerView(codeTypes: [.qr]) { result in
+        CodeScannerView(codeTypes: [.qr], isPausedScanning: .constant(false)) { result in
             // do nothing
         }
     }
